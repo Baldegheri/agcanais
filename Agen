@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Consulta CNPJ</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, button { padding: 8px; font-size: 1rem; }
+    #resultado p { margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <h1>Consulta de CNPJ</h1>
+  <p>Digite o CNPJ (apenas números):</p>
+  <input type="text" id="cnpj" placeholder="Ex: 00000000000191">
+  <button id="buscar">Buscar</button>
+  
+  <div id="resultado"></div>
+  
+  <script>
+    document.getElementById('buscar').addEventListener('click', function() {
+      let cnpj = document.getElementById('cnpj').value;
+      // Remove quaisquer caracteres não numéricos
+      cnpj = cnpj.replace(/\D/g, '');
+      
+      if(cnpj.length !== 14){
+        alert('CNPJ inválido. Deve conter 14 dígitos.');
+        return;
+      }
+      
+      const url = `https://www.receitaws.com.br/v1/cnpj/${cnpj}`;
+      
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          // Em caso de erro na consulta, a API pode retornar um status de erro
+          if(data.status === 'ERROR'){
+            document.getElementById('resultado').innerHTML = `<p>Erro: ${data.message}</p>`;
+            return;
+          }
+          
+          // Monta o endereço concatenando logradouro, número e complemento (se houver)
+          const enderecoCompleto = `${data.logradouro}, ${data.numero}${data.complemento ? ' - ' + data.complemento : ''}`;
+          
+          document.getElementById('resultado').innerHTML = `
+            <p><strong>CNPJ:</strong> ${data.cnpj}</p>
+            <p><strong>Razão Social:</strong> ${data.nome}</p>
+            <p><strong>Endereço:</strong> ${enderecoCompleto}</p>
+            <p><strong>Cidade:</strong> ${data.municipio}</p>
+            <p><strong>UF:</strong> ${data.uf}</p>
+          `;
+        })
+        .catch(error => {
+          console.error('Erro:', error);
+          document.getElementById('resultado').innerHTML = `<p>Erro ao buscar dados.</p>`;
+        });
+    });
+  </script>
+</body>
+</html>
